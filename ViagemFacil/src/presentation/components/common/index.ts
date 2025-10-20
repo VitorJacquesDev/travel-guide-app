@@ -7,3 +7,5 @@ export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as SkeletonLoader } from './SkeletonLoader';
 export { default as PointOfInterestCardSkeleton } from './PointOfInterestCardSkeleton';
 export { default as NetworkStatusBar } from './NetworkStatusBar';
+export { default as FadeInView } from './FadeInView';
+export { default as SlideInView } from './SlideInView';
