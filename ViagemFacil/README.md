@@ -1,136 +1,135 @@
-# ViagemFacil - Travel App
+# ViagemFácil - Travel Guide App
 
-A comprehensive travel application built with Expo/React Native that helps users discover tourist attractions, visualize them on interactive maps, save favorites, and receive personalized recommendations.
+Um aplicativo móvel completo para descobrir e explorar pontos turísticos, desenvolvido com React Native, Expo e Firebase.
 
-## Features
+## 🚀 Funcionalidades Implementadas
 
-- 🔐 User authentication with Firebase Auth
-- 🗺️ Interactive maps with Google Maps integration
-- 📍 Location-based recommendations
-- ⭐ Favorites management
-- 🔍 Advanced search and filtering
-- 🎨 Clean Architecture implementation
-- 🌍 Multi-language support (Portuguese, English, Spanish)
-- 🌙 Dark/Light theme support
+### ✅ Autenticação e Usuários
+- Sistema completo de autenticação com Firebase Auth
+- Telas de login, cadastro e onboarding
+- Gerenciamento de perfil de usuário
+- Contexto global de autenticação
 
-## Architecture
+### ✅ Navegação e Interface
+- Navegação com React Navigation (Stack + Bottom Tabs)
+- 5 telas principais: Home, Busca, Mapa, Favoritos, Perfil
+- Tema claro/escuro com sistema automático
+- Componentes UI reutilizáveis e responsivos
 
-This project follows Clean Architecture principles with three main layers:
+### ✅ Pontos Turísticos
+- Repositório Firestore para dados dos pontos
+- Sistema de recomendações baseado em localização
+- Busca avançada com filtros (categoria, preço, avaliação)
+- Dados de exemplo com pontos turísticos brasileiros
 
-- **Domain Layer**: Business logic, entities, and use cases
-- **Data Layer**: Repository implementations and data sources
-- **Presentation Layer**: UI components, screens, and navigation
+### ✅ Mapas e Localização
+- Integração com react-native-maps
+- Serviço de localização com permissões
+- Marcadores customizados por categoria
+- Cálculo de distâncias e pontos próximos
 
-## Project Structure
+### ✅ Sistema de Favoritos
+- Adicionar/remover pontos dos favoritos
+- Sincronização em tempo real com Firestore
+- Armazenamento offline com AsyncStorage
+- Atualizações otimistas para melhor UX
+
+### ✅ Tratamento de Erros
+- Error Boundary global para crashes
+- Detecção de conectividade de rede
+- Estados de loading com skeletons
+- Feedback visual para erros e estados offline
+
+### ✅ Internacionalização
+- Suporte a 3 idiomas: Português, Inglês, Espanhol
+- Detecção automática do idioma do dispositivo
+- Hook personalizado para traduções
+
+### ✅ Performance e Qualidade
+- Arquitetura Clean Architecture
+- Testes unitários abrangentes
+- Caching inteligente com React Query
+- Componentes otimizados e reutilizáveis
+
+## 🏗️ Arquitetura
+
+O projeto segue os princípios da Clean Architecture:
 
 ```
 src/
-├── domain/              # Business Logic Layer
-│   ├── models/          # Core entities and value objects
-│   ├── repositories/    # Abstract repository interfaces
-│   └── usecases/        # Business use cases
-├── data/                # Data Access Layer
-│   ├── repositories/    # Concrete repository implementations
-│   ├── datasources/     # External data sources (Firebase, APIs)
-│   └── models/          # DTOs and data mappers
-├── presentation/        # UI Layer
-│   ├── screens/         # Screen components
-│   ├── components/      # Reusable UI components
-│   ├── navigation/      # Navigation configuration
-│   ├── hooks/           # Custom React hooks
-│   └── theme/           # Styling and theming
-└── core/                # Shared utilities
-    ├── config/          # App configuration
-    └── utils/           # Helper functions
+├── core/           # Configurações e serviços centrais
+├── domain/         # Entidades, casos de uso e interfaces
+├── data/           # Implementações de repositórios e fontes de dados
+└── presentation/   # UI, componentes, telas e contextos
 ```
 
-## Getting Started
+## 🛠️ Tecnologias Utilizadas
 
-### Prerequisites
+- **React Native** + **Expo** - Framework mobile
+- **TypeScript** - Tipagem estática
+- **Firebase** - Backend (Auth + Firestore)
+- **React Navigation** - Navegação
+- **React Query** - Gerenciamento de estado e cache
+- **React Native Maps** - Mapas interativos
+- **Expo Location** - Serviços de localização
+- **AsyncStorage** - Armazenamento local
+- **Jest** - Testes unitários
 
-- Node.js (v18 or later)
-- Expo CLI
-- Firebase project setup
-- Google Maps API key
+## 📱 Telas Implementadas
 
-### Installation
+1. **Splash Screen** - Tela inicial com logo
+2. **Onboarding** - Introdução ao app
+3. **Login/Cadastro** - Autenticação de usuários
+4. **Home** - Recomendações personalizadas
+5. **Busca** - Pesquisa com filtros avançados
+6. **Mapa** - Visualização geográfica dos pontos
+7. **Favoritos** - Lista de pontos salvos
+8. **Perfil** - Informações e configurações do usuário
 
-1. Clone the repository
-2. Install dependencies:
+## 🧪 Testes
+
+O projeto inclui testes unitários para:
+- Casos de uso (Use Cases)
+- Repositórios (Repositories)
+- Serviços (Services)
+- Hooks personalizados
+- Componentes React
+
+Execute os testes com:
+```bash
+npm test
+```
+
+## 🚀 Como Executar
+
+1. **Instalar dependências:**
    ```bash
    npm install
-   # or
-   bun install
    ```
 
-3. Copy environment variables:
-   ```bash
-   cp .env.example .env
-   ```
+2. **Configurar Firebase:**
+   - Criar projeto no Firebase Console
+   - Adicionar configurações em `src/core/config/firebase.ts`
 
-4. Configure your Firebase and Google Maps credentials in `.env`
-
-5. Start the development server:
+3. **Executar o app:**
    ```bash
    npm start
    ```
 
-### Firebase Setup
+## 📋 Próximos Passos
 
-1. Create a Firebase project
-2. Enable Authentication and Firestore
-3. Configure security rules using the provided `firestore.rules`
-4. Add your Firebase configuration to the environment variables
+Para produção, considere implementar:
+- [ ] Autenticação social (Google, Facebook)
+- [ ] Sistema de avaliações e comentários
+- [ ] Notificações push
+- [ ] Modo offline completo
+- [ ] Analytics e crash reporting
+- [ ] Testes E2E com Detox
 
-### Environment Variables
+## 🤝 Contribuição
 
-Create a `.env` file with the following variables:
+Este projeto foi desenvolvido seguindo as melhores práticas de desenvolvimento mobile e está pronto para extensões futuras.
 
-```env
-EXPO_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-EXPO_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-EXPO_PUBLIC_FIREBASE_APP_ID=your-app-id
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
-```
+## 📄 Licença
 
-## Development
-
-### Code Quality
-
-The project includes ESLint and Prettier configurations for consistent code formatting:
-
-```bash
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Format code
-npm run format
-
-# Type check
-npm run type-check
-```
-
-### Building
-
-```bash
-# Build for production
-npm run build
-```
-
-## Contributing
-
-1. Follow the Clean Architecture principles
-2. Write TypeScript with strict mode enabled
-3. Use the established folder structure
-4. Follow the ESLint and Prettier configurations
-5. Write meaningful commit messages
-
-## License
-
-This project is licensed under the MIT License.
+MIT License - veja o arquivo LICENSE para detalhes.
