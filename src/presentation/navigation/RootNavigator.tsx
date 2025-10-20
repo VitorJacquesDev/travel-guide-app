@@ -11,12 +11,12 @@ import PointDetailsScreen from '../screens/main/PointDetailsScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator(): JSX.Element {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isLoading ? (
+        {loading ? (
           // Show loading screen while checking auth state
           <Stack.Screen name="Auth" component={AuthStack} />
         ) : user ? (

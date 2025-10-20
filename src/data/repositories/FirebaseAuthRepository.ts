@@ -2,233 +2,145 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  onAuthStateChanged,
   sendPasswordResetEmail,
   updateProfile,
-  updateEmail,
-  updatePassword,
-  sendEmailVerification,
-  reload,
-  User,
-  AuthError as FirebaseAuthError,
+  User as FirebaseUser,
 } from 'firebase/auth';
 import { auth } from '@/core/config/firebase';
-import {
-  AuthRepository,
-  AuthResult,
-  AuthUser,
-  AuthError,
-  AuthErrorType,
-} from '@/domain/repositories/AuthRepository';
+import { AuthRepository, AuthResult } from '@/domain/repositories/AuthRepository';
+import { User, LoginCredentials, RegisterCredentials } from '@/domain/models/User';
 
-/**
- * Firebase implementation of AuthRepository
- * Handles user authentication using Firebase Auth
- */
 export class FirebaseAuthRepository implements AuthRepository {
-  /**
-   * Convert Firebase User to AuthUser
-   */
-  private mapFirebaseUser(user: User): AuthUser {
-    return {
-      uid: user.uid,
-      email: user.email || '',
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      emailVerified: user.emailVerified,
-    };
-  }
-
-  /**
-   * Convert Firebase AuthError to AuthError
-   */
-  private mapFirebaseError(error: FirebaseAuthError): AuthError {
-    let type: AuthErrorType;
-    let message: string;
-
-    switch (error.code) {
-      case 'auth/invalid-credential':
-      case 'auth/wrong-password':
-        type = AuthErrorType.INVALID_CREDENTIALS;
-        message = 'Email ou senha incorretos';
-        break;
-      case 'auth/user-not-found':
-        type = AuthErrorType.USER_NOT_FOUND;
-        message = 'Usuário não encontrado';
-        break;
-      case 'auth/email-already-in-use':
-        type = AuthErrorType.EMAIL_ALREADY_IN_USE;
-        message = 'Este email já está em uso';
-        break;
-      case 'auth/weak-password':
-        type = AuthErrorType.WEAK_PASSWORD;
-        message = 'A senha deve ter pelo menos 6 caracteres';
-        break;
-      case 'auth/network-request-failed':
-        type = AuthErrorType.NETWORK_ERROR;
-        message = 'Erro de conexão. Verifique sua internet';
-        break;
-      case 'auth/too-many-requests':
-        type = AuthErrorType.TOO_MANY_REQUESTS;
-        message = 'Muitas tentativas. Tente novamente mais tarde';
-        break;
-      default:
-        type = AuthErrorType.UNKNOWN_ERROR;
-        message = 'Erro desconhecido. Tente novamente';
-    }
-
-    return {
-      type,
-      message,
-      originalError: error,
-    };
-  }
-
-  async signIn(email: string, password: string): Promise<AuthResult> {
+  async login(credentials: LoginCredentials): Promise<User> {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = this.mapFirebaseUser(userCredential.user);
-      
-      return {
-        user,
-        isNewUser: false,
-      };
-    } catch (error) {
-      throw this.mapFirebaseError(error as FirebaseAuthError);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        credentials.email,
+        credentials.password
+      );
+      return this.mapFirebaseUserToDomain(userCredential.user);
+    } catch (error: any) {
+      throw this.mapFirebaseError(error);
+    }
+  }
+
+  async register(credentials: RegisterCredentials): Promise<User> {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        credentials.email,
+        credentials.password
+      );
+
+      if (credentials.displayName) {
+        await updateProfile(userCredential.user, {
+          displayName: credentials.displayName,
+        });
+      }
+
+      return this.mapFirebaseUserToDomain(userCredential.user);
+    } catch (error: any) {
+      throw this.mapFirebaseError(error);
     }
   }
 
   async signUp(email: string, password: string, displayName: string): Promise<AuthResult> {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Update the user's display name
-      await updateProfile(userCredential.user, {
-        displayName: displayName.trim(),
-      });
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-      // Reload user to get updated profile
-      await reload(userCredential.user);
+      if (displayName) {
+        await updateProfile(userCredential.user, {
+          displayName: displayName,
+        });
+      }
 
-      const user = this.mapFirebaseUser(userCredential.user);
+      const user = this.mapFirebaseUserToDomain(userCredential.user);
       
       return {
         user,
         isNewUser: true,
       };
-    } catch (error) {
-      throw this.mapFirebaseError(error as FirebaseAuthError);
+    } catch (error: any) {
+      throw this.mapFirebaseError(error);
     }
   }
 
-  async signOut(): Promise<void> {
+  async logout(): Promise<void> {
     try {
       await signOut(auth);
-    } catch (error) {
-      throw this.mapFirebaseError(error as FirebaseAuthError);
+    } catch (error: any) {
+      throw this.mapFirebaseError(error);
     }
   }
 
-  async getCurrentUser(): Promise<AuthUser | null> {
-    const user = auth.currentUser;
-    return user ? this.mapFirebaseUser(user) : null;
+  async getCurrentUser(): Promise<User | null> {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) {
+      return null;
+    }
+    return this.mapFirebaseUserToDomain(firebaseUser);
   }
 
-  async sendPasswordResetEmail(email: string): Promise<void> {
+  async resetPassword(email: string): Promise<void> {
     try {
       await sendPasswordResetEmail(auth, email);
-    } catch (error) {
-      throw this.mapFirebaseError(error as FirebaseAuthError);
+    } catch (error: any) {
+      throw this.mapFirebaseError(error);
     }
   }
 
-  async updateProfile(updates: { displayName?: string; photoURL?: string }): Promise<void> {
-    const user = auth.currentUser;
-    if (!user) {
+  async updateProfile(userData: Partial<User>): Promise<User> {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) {
       throw new Error('Usuário não autenticado');
     }
 
     try {
-      await updateProfile(user, updates);
-      await reload(user);
-    } catch (error) {
-      throw this.mapFirebaseError(error as FirebaseAuthError);
+      await updateProfile(firebaseUser, {
+        displayName: userData.displayName || null,
+        photoURL: userData.photoURL || null,
+      });
+
+      return this.mapFirebaseUserToDomain(firebaseUser);
+    } catch (error: any) {
+      throw this.mapFirebaseError(error);
     }
   }
 
-  async updateEmail(newEmail: string): Promise<void> {
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    try {
-      await updateEmail(user, newEmail);
-    } catch (error) {
-      throw this.mapFirebaseError(error as FirebaseAuthError);
-    }
+  private mapFirebaseUserToDomain(firebaseUser: FirebaseUser): User {
+    return {
+      id: firebaseUser.uid,
+      email: firebaseUser.email!,
+      displayName: firebaseUser.displayName || null,
+      photoURL: firebaseUser.photoURL || null,
+      emailVerified: firebaseUser.emailVerified,
+      createdAt: new Date(firebaseUser.metadata.creationTime!),
+      lastLoginAt: firebaseUser.metadata.lastSignInTime
+        ? new Date(firebaseUser.metadata.lastSignInTime)
+        : null,
+    };
   }
 
-  async updatePassword(newPassword: string): Promise<void> {
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    try {
-      await updatePassword(user, newPassword);
-    } catch (error) {
-      throw this.mapFirebaseError(error as FirebaseAuthError);
-    }
-  }
-
-  async sendEmailVerification(): Promise<void> {
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    try {
-      await sendEmailVerification(user);
-    } catch (error) {
-      throw this.mapFirebaseError(error as FirebaseAuthError);
-    }
-  }
-
-  async reloadUser(): Promise<void> {
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    try {
-      await reload(user);
-    } catch (error) {
-      throw this.mapFirebaseError(error as FirebaseAuthError);
-    }
-  }
-
-  onAuthStateChanged(callback: (user: AuthUser | null) => void): () => void {
-    return onAuthStateChanged(auth, (user) => {
-      callback(user ? this.mapFirebaseUser(user) : null);
-    });
-  }
-
-  isAuthenticated(): boolean {
-    return auth.currentUser !== null;
-  }
-
-  async getIdToken(forceRefresh = false): Promise<string | null> {
-    const user = auth.currentUser;
-    if (!user) {
-      return null;
-    }
-
-    try {
-      return await user.getIdToken(forceRefresh);
-    } catch (error) {
-      console.error('Error getting ID token:', error);
-      return null;
+  private mapFirebaseError(error: any): Error {
+    switch (error.code) {
+      case 'auth/user-not-found':
+        return new Error('Usuário não encontrado');
+      case 'auth/wrong-password':
+        return new Error('Senha incorreta');
+      case 'auth/email-already-in-use':
+        return new Error('Este email já está em uso');
+      case 'auth/weak-password':
+        return new Error('A senha é muito fraca');
+      case 'auth/invalid-email':
+        return new Error('Email inválido');
+      case 'auth/too-many-requests':
+        return new Error('Muitas tentativas. Tente novamente mais tarde');
+      default:
+        return new Error(error.message || 'Erro de autenticação');
     }
   }
 }

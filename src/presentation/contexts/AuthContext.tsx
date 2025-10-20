@@ -1,134 +1,120 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AuthUser } from '@/domain/repositories/AuthRepository';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/core/config/firebase';
+import { User } from '@/domain/models/User';
 import { FirebaseAuthRepository } from '@/data/repositories/FirebaseAuthRepository';
-import { SignInUseCaseImpl } from '@/data/usecases/auth/SignInUseCaseImpl';
+import { LoginUseCase } from '@/domain/usecases/LoginUseCase';
+import { GetCurrentUserUseCase } from '@/domain/usecases/GetCurrentUserUseCase';
 import { SignUpUseCaseImpl } from '@/data/usecases/auth/SignUpUseCaseImpl';
 
-/**
- * Authentication state interface
- */
-export interface AuthState {
-  user: AuthUser | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-}
-
-/**
- * Authentication context interface
- */
-export interface AuthContextType extends AuthState {
-  signIn: (email: string, password: string) => Promise<void>;
+interface AuthContextData {
+  user: User | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  sendPasswordResetEmail: (email: string) => Promise<void>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
-/**
- * Authentication context
- */
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-/**
- * Authentication provider props
- */
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-/**
- * Authentication provider component
- * Manages global authentication state and provides auth methods
- */
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Initialize repositories and use cases
+  // Dependency injection
   const authRepository = new FirebaseAuthRepository();
-  const signInUseCase = new SignInUseCaseImpl(authRepository);
+  const loginUseCase = new LoginUseCase(authRepository);
   const signUpUseCase = new SignUpUseCaseImpl(authRepository);
+  const getCurrentUserUseCase = new GetCurrentUserUseCase(authRepository);
 
-  // Set up auth state listener
   useEffect(() => {
-    const unsubscribe = authRepository.onAuthStateChanged((authUser) => {
-      setUser(authUser);
-      setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const domainUser = await getCurrentUserUseCase.execute();
+          setUser(domainUser);
+        } catch (error) {
+          console.error('Erro ao obter usuário atual:', error);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
     });
 
     return unsubscribe;
   }, []);
 
-  /**
-   * Sign in user
-   */
-  const signIn = async (email: string, password: string): Promise<void> => {
-    setIsLoading(true);
+  const login = async (email: string, password: string): Promise<void> => {
     try {
-      await signInUseCase.execute({ email, password });
-      // User state will be updated by the auth state listener
+      setLoading(true);
+      const loggedUser = await loginUseCase.execute({ email, password });
+      setUser(loggedUser);
     } catch (error) {
-      setIsLoading(false);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  /**
-   * Sign up new user
-   */
   const signUp = async (email: string, password: string, displayName: string): Promise<void> => {
-    setIsLoading(true);
     try {
-      await signUpUseCase.execute({ email, password, displayName });
-      // User state will be updated by the auth state listener
+      setLoading(true);
+      const result = await signUpUseCase.execute({ email, password, displayName });
+      setUser(result.user);
     } catch (error) {
-      setIsLoading(false);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      await authRepository.logout();
+      setUser(null);
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string): Promise<void> => {
+    try {
+      await authRepository.resetPassword(email);
+    } catch (error) {
       throw error;
     }
   };
 
-  /**
-   * Sign out user
-   */
-  const signOut = async (): Promise<void> => {
-    setIsLoading(true);
-    try {
-      await authRepository.signOut();
-      // User state will be updated by the auth state listener
-    } catch (error) {
-      setIsLoading(false);
-      throw error;
-    }
-  };
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        signUp,
+        logout,
+        resetPassword,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
 
-  /**
-   * Send password reset email
-   */
-  const sendPasswordResetEmail = async (email: string): Promise<void> => {
-    await authRepository.sendPasswordResetEmail(email);
-  };
-
-  const contextValue: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated: user !== null,
-    signIn,
-    signUp,
-    signOut,
-    sendPasswordResetEmail,
-  };
-
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
-};
-
-/**
- * Hook to use authentication context
- * @returns Authentication context
- * @throws Error if used outside AuthProvider
- */
-export const useAuth = (): AuthContextType => {
+export function useAuth(): AuthContextData {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
-};
+}
