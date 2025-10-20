@@ -34,7 +34,9 @@
     "react-native-reanimated": "~3.10.0",
     "react-hook-form": "^7.48.0",
     "@hookform/resolvers": "^3.3.0",
-    "zod": "^3.22.0"
+    "zod": "^3.22.0",
+    "@expo/vector-icons": "^14.0.0",
+    "@react-native-async-storage/async-storage": "1.23.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

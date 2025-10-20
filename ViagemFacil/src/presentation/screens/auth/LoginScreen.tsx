@@ -2,28 +2,28 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { AuthStackScreenProps } from '../../navigation/types';
 
-type Props = AuthStackScreenProps<'SignUp'>;
+type Props = AuthStackScreenProps<'Login'>;
 
-export default function SignUpScreen({ navigation }: Props): JSX.Element {
-  const handleLogin = () => {
-    navigation.navigate('Login');
+export default function LoginScreen({ navigation }: Props): JSX.Element {
+  const handleSignUp = () => {
+    navigation.navigate('SignUp');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cadastrar</Text>
-      <Text style={styles.subtitle}>Crie sua conta para começar</Text>
+      <Text style={styles.title}>Entrar</Text>
+      <Text style={styles.subtitle}>Faça login para continuar</Text>
       
-      {/* SignUp form will be implemented in Task 2 */}
+      {/* Login form will be implemented in Task 2 */}
       <View style={styles.placeholder}>
         <Text style={styles.placeholderText}>
-          Formulário de cadastro será implementado na Task 2
+          Formulário de login será implementado na Task 2
         </Text>
       </View>
       
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginText}>
-          Já tem conta? <Text style={styles.loginLink}>Entrar</Text>
+      <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
+        <Text style={styles.signUpText}>
+          Não tem conta? <Text style={styles.signUpLink}>Cadastre-se</Text>
         </Text>
       </TouchableOpacity>
     </View>
@@ -61,15 +61,15 @@ const styles = StyleSheet.create({
     color: '#999999',
     textAlign: 'center',
   },
-  loginButton: {
+  signUpButton: {
     paddingVertical: 16,
     alignItems: 'center',
   },
-  loginText: {
+  signUpText: {
     fontSize: 14,
     color: '#666666',
   },
-  loginLink: {
+  signUpLink: {
     color: '#007AFF',
     fontWeight: '600',
   },

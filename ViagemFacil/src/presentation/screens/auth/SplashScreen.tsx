@@ -1,103 +1,58 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ActivityIndicator } from 'react-native';
-import { useAuth } from '@/presentation/contexts/AuthContext';
-import { initializeFirebase } from '@/core/config/firebaseInit';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { AuthStackScreenProps } from '../../navigation/types';
+import { useAuth } from '../../contexts/AuthContext';
 
-/**
- * Splash screen component
- * Shows app logo and handles initial authentication check
- */
-export const SplashScreen: React.FC = () => {
-  const { isLoading } = useAuth();
+type Props = AuthStackScreenProps<'Splash'>;
+
+export default function SplashScreen({ navigation }: Props): JSX.Element {
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    // Initialize Firebase services
-    initializeFirebase();
-  }, []);
+    const timer = setTimeout(() => {
+      if (!isLoading) {
+        if (user) {
+          // User is authenticated, navigate to main app
+          navigation.replace('Onboarding'); // For now, always show onboarding
+        } else {
+          // User is not authenticated, show onboarding
+          navigation.replace('Onboarding');
+        }
+      }
+    }, 2000); // Show splash for 2 seconds
+
+    return () => clearTimeout(timer);
+  }, [user, isLoading, navigation]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        {/* App Logo - Replace with actual logo */}
-        <View style={styles.logoPlaceholder}>
-          <Text style={styles.logoText}>VF</Text>
-        </View>
-        <Text style={styles.appName}>ViagemFácil</Text>
-        <Text style={styles.tagline}>Descubra lugares incríveis</Text>
-      </View>
-
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Carregando...</Text>
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.version}>v1.0.0</Text>
-      </View>
+      <Text style={styles.title}>ViagemFácil</Text>
+      <Text style={styles.subtitle}>Descubra lugares incríveis</Text>
+      <ActivityIndicator size="large" color="#007AFF" style={styles.loader} />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  logoContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
     backgroundColor: '#007AFF',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+    justifyContent: 'center',
   },
-  logoText: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  appName: {
+  title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
-  tagline: {
+  subtitle: {
     fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    alignItems: 'center',
+    color: '#FFFFFF',
+    opacity: 0.8,
     marginBottom: 40,
   },
-  loadingText: {
-    fontSize: 16,
-    color: '#666666',
-    marginTop: 12,
-  },
-  footer: {
-    alignItems: 'center',
-  },
-  version: {
-    fontSize: 14,
-    color: '#999999',
+  loader: {
+    marginTop: 20,
   },
 });
