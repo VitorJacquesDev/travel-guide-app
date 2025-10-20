@@ -130,3 +130,9 @@ presentation/components/
 - **Root level**: Build tools, linting, and project configuration
 - **src/core/config/**: Runtime application configuration
 - **Environment**: Use `.env` for environment-specific values with `EXPO_PUBLIC_` prefix for client-side access
+
+## Documentation Rules
+
+- **NEVER create new .md files** for documentation, summaries, or any other purpose
+- All documentation should be kept in existing steering files or code comments
+- Avoid creating unnecessary documentation files that clutter the workspace
