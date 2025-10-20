@@ -1,44 +1,28 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection - users can only access their own data
+    // Users can read and write their own data
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // Validate user data structure
-      allow create: if request.auth != null 
-        && request.auth.uid == userId
-        && validateUserData(request.resource.data);
-      
-      allow update: if request.auth != null 
-        && request.auth.uid == userId
-        && validateUserData(request.resource.data);
     }
     
-    // Points of interest collection - publicly readable, admin writable
-    match /points_of_interest/{pointId} {
-      // Anyone can read points of interest
-      allow read: if true;
-      
-      // Only authenticated users with admin role can write
-      // Note: In production, implement proper admin role checking
-      allow write: if request.auth != null && hasAdminRole(request.auth.uid);
+    // Travel data - authenticated users can read all, but only write their own
+    match /travels/{travelId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
-    // Helper functions
-    function validateUserData(data) {
-      return data.keys().hasAll(['email', 'displayName', 'preferences', 'favorites', 'createdAt'])
-        && data.email is string
-        && data.displayName is string
-        && data.preferences is map
-        && data.favorites is list
-        && data.createdAt is timestamp;
+    // Reviews - authenticated users can read all, but only write their own
+    match /reviews/{reviewId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
-    function hasAdminRole(userId) {
-      // In production, check against an admin users collection or custom claims
-      // For now, return false to prevent writes
-      return false;
+    // Places - authenticated users can read all
+    match /places/{placeId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; // Allow authenticated users to add places
     }
   }
 }

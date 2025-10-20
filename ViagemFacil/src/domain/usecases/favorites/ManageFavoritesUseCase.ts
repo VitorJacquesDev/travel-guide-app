@@ -1,4 +1,3 @@
-import { VoidUseCase, UseCase } from '../base/UseCase';
 import { PointOfInterest } from '../../models/PointOfInterest';
 
 /**
@@ -13,6 +12,15 @@ export interface ToggleFavoriteParams {
  */
 export interface GetFavoritesParams {
   readonly userId?: string; // Optional, defaults to current user
+}
+
+/**
+ * Parameters for managing favorites (legacy compatibility)
+ */
+export interface ManageFavoritesParams {
+  readonly userId: string;
+  readonly pointId: string;
+  readonly action: 'add' | 'remove' | 'toggle';
 }
 
 /**

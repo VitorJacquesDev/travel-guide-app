@@ -3,14 +3,16 @@ import {
   getDoc, 
   setDoc, 
   updateDoc, 
+  deleteDoc,
   arrayUnion, 
   arrayRemove,
   onSnapshot,
-  Unsubscribe
+  Unsubscribe,
+  Timestamp
 } from 'firebase/firestore';
-import { db } from '../../core/config/firebase';
+import { auth, db } from '../../core/config/firebase';
 import { UserRepository } from '../../domain/repositories/UserRepository';
-import { UserProfile } from '../../domain/models/UserProfile';
+import { UserProfile, UserPreferences, createUserProfile, Language, Theme, UnitSystem } from '../../domain/models/UserProfile';
 
 /**
  * Firebase implementation of UserRepository
@@ -18,66 +20,57 @@ import { UserProfile } from '../../domain/models/UserProfile';
 export class FirebaseUserRepository implements UserRepository {
   private readonly collectionName = 'users';
 
-  /**
-   * Convert Firestore document to UserProfile domain model
-   */
-  private documentToUserProfile(id: string, data: any): UserProfile {
-    return {
-      id,
-      email: data.email,
-      displayName: data.displayName,
-      photoURL: data.photoURL,
-      preferences: {
-        favoriteCategories: data.preferences?.favoriteCategories || [],
-        priceRange: data.preferences?.priceRange || 'medium',
-        maxDistance: data.preferences?.maxDistance || 50,
-        language: data.preferences?.language || 'pt',
-        theme: data.preferences?.theme || 'system',
-        notifications: {
-          recommendations: data.preferences?.notifications?.recommendations ?? true,
-          favorites: data.preferences?.notifications?.favorites ?? true,
-          updates: data.preferences?.notifications?.updates ?? true,
-        },
-      },
-      favoritePointIds: data.favoritePointIds || [],
-      visitedPointIds: data.visitedPointIds || [],
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
-    };
+  async getCurrentUser(): Promise<UserProfile | null> {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        return null;
+      }
+      return await this.getUserById(currentUser.uid);
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      throw new Error('Failed to get current user');
+    }
   }
 
-  async getUserProfile(userId: string): Promise<UserProfile | null> {
+  async getUserById(userId: string): Promise<UserProfile | null> {
     try {
-      const docRef = doc(db, this.collectionName, userId);
-      const docSnap = await getDoc(docRef);
+      const userDoc = doc(db, this.collectionName, userId);
+      const docSnap = await getDoc(userDoc);
 
-      if (docSnap.exists()) {
-        return this.documentToUserProfile(userId, docSnap.data());
+      if (!docSnap.exists()) {
+        return null;
       }
 
-      return null;
+      return this.convertFirestoreToUserProfile(docSnap.data(), userId);
     } catch (error) {
-      console.error('Error getting user profile:', error);
+      console.error('Error getting user by ID:', error);
       throw new Error('Failed to get user profile');
     }
   }
 
   async createUserProfile(userProfile: UserProfile): Promise<void> {
     try {
-      const docRef = doc(db, this.collectionName, userProfile.id);
-      
+      const userDoc = doc(db, this.collectionName, userProfile.id);
       const userData = {
         email: userProfile.email,
         displayName: userProfile.displayName,
         photoURL: userProfile.photoURL,
-        preferences: userProfile.preferences,
-        favoritePointIds: userProfile.favoritePointIds,
-        visitedPointIds: userProfile.visitedPointIds,
-        createdAt: userProfile.createdAt,
-        updatedAt: new Date(),
+        preferences: {
+          language: userProfile.preferences.language,
+          theme: userProfile.preferences.theme,
+          unitSystem: userProfile.preferences.unitSystem,
+          interests: userProfile.preferences.interests,
+          favoriteCategories: userProfile.preferences.favoriteCategories,
+          notificationsEnabled: userProfile.preferences.notificationsEnabled,
+        },
+        favorites: userProfile.favorites,
+        visitedPlaces: userProfile.visitedPlaces,
+        createdAt: Timestamp.fromDate(userProfile.createdAt),
+        updatedAt: Timestamp.fromDate(userProfile.updatedAt),
       };
 
-      await setDoc(docRef, userData);
+      await setDoc(userDoc, userData);
     } catch (error) {
       console.error('Error creating user profile:', error);
       throw new Error('Failed to create user profile');
@@ -86,82 +79,153 @@ export class FirebaseUserRepository implements UserRepository {
 
   async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<void> {
     try {
-      const docRef = doc(db, this.collectionName, userId);
-      
+      const userDoc = doc(db, this.collectionName, userId);
       const updateData: any = {
         ...updates,
-        updatedAt: new Date(),
+        updatedAt: Timestamp.now(),
       };
 
-      // Remove id from updates if present
-      delete updateData.id;
+      // Convert dates to Firestore timestamps
+      if (updates.createdAt) {
+        updateData.createdAt = Timestamp.fromDate(updates.createdAt);
+      }
 
-      await updateDoc(docRef, updateData);
+      await updateDoc(userDoc, updateData);
     } catch (error) {
       console.error('Error updating user profile:', error);
       throw new Error('Failed to update user profile');
     }
   }
 
-  async addFavoritePoint(userId: string, pointId: string): Promise<void> {
+  async updateUserPreferences(userId: string, preferences: UserPreferences): Promise<void> {
     try {
-      const docRef = doc(db, this.collectionName, userId);
-      
-      await updateDoc(docRef, {
-        favoritePointIds: arrayUnion(pointId),
-        updatedAt: new Date(),
+      const userDoc = doc(db, this.collectionName, userId);
+      await updateDoc(userDoc, {
+        preferences,
+        updatedAt: Timestamp.now(),
       });
     } catch (error) {
-      console.error('Error adding favorite point:', error);
-      throw new Error('Failed to add favorite point');
+      console.error('Error updating user preferences:', error);
+      throw new Error('Failed to update user preferences');
     }
   }
 
-  async removeFavoritePoint(userId: string, pointId: string): Promise<void> {
+  async addToFavorites(userId: string, pointId: string): Promise<void> {
     try {
-      const docRef = doc(db, this.collectionName, userId);
-      
-      await updateDoc(docRef, {
-        favoritePointIds: arrayRemove(pointId),
-        updatedAt: new Date(),
+      const userDoc = doc(db, this.collectionName, userId);
+      await updateDoc(userDoc, {
+        favorites: arrayUnion(pointId),
+        updatedAt: Timestamp.now(),
       });
     } catch (error) {
-      console.error('Error removing favorite point:', error);
-      throw new Error('Failed to remove favorite point');
+      console.error('Error adding to favorites:', error);
+      throw new Error('Failed to add to favorites');
     }
+  }
+
+  async removeFromFavorites(userId: string, pointId: string): Promise<void> {
+    try {
+      const userDoc = doc(db, this.collectionName, userId);
+      await updateDoc(userDoc, {
+        favorites: arrayRemove(pointId),
+        updatedAt: Timestamp.now(),
+      });
+    } catch (error) {
+      console.error('Error removing from favorites:', error);
+      throw new Error('Failed to remove from favorites');
+    }
+  }
+
+  async getFavorites(userId: string): Promise<readonly string[]> {
+    try {
+      const userProfile = await this.getUserById(userId);
+      return userProfile?.favorites || [];
+    } catch (error) {
+      console.error('Error getting favorites:', error);
+      throw new Error('Failed to get favorites');
+    }
+  }
+
+  async addToVisitedPlaces(userId: string, pointId: string): Promise<void> {
+    try {
+      const userDoc = doc(db, this.collectionName, userId);
+      await updateDoc(userDoc, {
+        visitedPlaces: arrayUnion(pointId),
+        updatedAt: Timestamp.now(),
+      });
+    } catch (error) {
+      console.error('Error adding to visited places:', error);
+      throw new Error('Failed to add to visited places');
+    }
+  }
+
+  async getVisitedPlaces(userId: string): Promise<readonly string[]> {
+    try {
+      const userProfile = await this.getUserById(userId);
+      return userProfile?.visitedPlaces || [];
+    } catch (error) {
+      console.error('Error getting visited places:', error);
+      throw new Error('Failed to get visited places');
+    }
+  }
+
+  async deleteUserProfile(userId: string): Promise<void> {
+    try {
+      const userDoc = doc(db, this.collectionName, userId);
+      await deleteDoc(userDoc);
+    } catch (error) {
+      console.error('Error deleting user profile:', error);
+      throw new Error('Failed to delete user profile');
+    }
+  }
+
+  async isFavorite(userId: string, pointId: string): Promise<boolean> {
+    try {
+      const favorites = await this.getFavorites(userId);
+      return favorites.includes(pointId);
+    } catch (error) {
+      console.error('Error checking if favorite:', error);
+      return false;
+    }
+  }
+
+  async isVisited(userId: string, pointId: string): Promise<boolean> {
+    try {
+      const visitedPlaces = await this.getVisitedPlaces(userId);
+      return visitedPlaces.includes(pointId);
+    } catch (error) {
+      console.error('Error checking if visited:', error);
+      return false;
+    }
+  }
+
+  // Legacy methods for compatibility
+  async getUserProfile(userId: string): Promise<UserProfile | null> {
+    return this.getUserById(userId);
   }
 
   async getFavoritePointIds(userId: string): Promise<readonly string[]> {
-    try {
-      const profile = await this.getUserProfile(userId);
-      return profile?.favoritePointIds || [];
-    } catch (error) {
-      console.error('Error getting favorite point IDs:', error);
-      throw new Error('Failed to get favorite point IDs');
-    }
+    return this.getFavorites(userId);
+  }
+
+  async addFavoritePoint(userId: string, pointId: string): Promise<void> {
+    return this.addToFavorites(userId, pointId);
+  }
+
+  async removeFavoritePoint(userId: string, pointId: string): Promise<void> {
+    return this.removeFromFavorites(userId, pointId);
   }
 
   async addVisitedPoint(userId: string, pointId: string): Promise<void> {
-    try {
-      const docRef = doc(db, this.collectionName, userId);
-      
-      await updateDoc(docRef, {
-        visitedPointIds: arrayUnion(pointId),
-        updatedAt: new Date(),
-      });
-    } catch (error) {
-      console.error('Error adding visited point:', error);
-      throw new Error('Failed to add visited point');
-    }
+    return this.addToVisitedPlaces(userId, pointId);
   }
 
   async removeVisitedPoint(userId: string, pointId: string): Promise<void> {
     try {
-      const docRef = doc(db, this.collectionName, userId);
-      
-      await updateDoc(docRef, {
-        visitedPointIds: arrayRemove(pointId),
-        updatedAt: new Date(),
+      const userDoc = doc(db, this.collectionName, userId);
+      await updateDoc(userDoc, {
+        visitedPlaces: arrayRemove(pointId),
+        updatedAt: Timestamp.now(),
       });
     } catch (error) {
       console.error('Error removing visited point:', error);
@@ -182,7 +246,7 @@ export class FirebaseUserRepository implements UserRepository {
       docRef,
       (docSnap) => {
         if (docSnap.exists()) {
-          const profile = this.documentToUserProfile(userId, docSnap.data());
+          const profile = this.convertFirestoreToUserProfile(docSnap.data(), userId);
           callback(profile);
         } else {
           callback(null);
@@ -209,7 +273,7 @@ export class FirebaseUserRepository implements UserRepository {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          callback(data.favoritePointIds || []);
+          callback(data.favorites || []);
         } else {
           callback([]);
         }
@@ -219,5 +283,24 @@ export class FirebaseUserRepository implements UserRepository {
         callback([]);
       }
     );
+  }
+
+  private convertFirestoreToUserProfile(data: any, id: string): UserProfile {
+    return createUserProfile({
+      id,
+      email: data.email,
+      displayName: data.displayName,
+      photoURL: data.photoURL,
+      preferences: {
+        language: data.preferences?.language || Language.PORTUGUESE_BR,
+        theme: data.preferences?.theme || Theme.SYSTEM,
+        unitSystem: data.preferences?.unitSystem || UnitSystem.METRIC,
+        interests: data.preferences?.interests || [],
+        notificationsEnabled: data.preferences?.notificationsEnabled ?? true,
+      },
+      favorites: data.favorites || [],
+      visitedPlaces: data.visitedPlaces || [],
+      createdAt: data.createdAt?.toDate() || new Date(),
+    });
   }
 }

@@ -1,135 +1,206 @@
 # ViagemFácil - Travel Guide App
 
-Um aplicativo móvel completo para descobrir e explorar pontos turísticos, desenvolvido com React Native, Expo e Firebase.
+Um aplicativo móvel para descobrir e explorar pontos turísticos, desenvolvido com React Native e Expo.
 
-## 🚀 Funcionalidades Implementadas
+## 🚀 Funcionalidades
 
-### ✅ Autenticação e Usuários
-- Sistema completo de autenticação com Firebase Auth
-- Telas de login, cadastro e onboarding
-- Gerenciamento de perfil de usuário
-- Contexto global de autenticação
+- **Autenticação**: Login e cadastro de usuários com Firebase Auth
+- **Descoberta**: Explore pontos turísticos próximos com base na localização
+- **Busca**: Filtre por categoria, preço, avaliação e distância
+- **Favoritos**: Salve seus lugares preferidos
+- **Mapa**: Visualize pontos de interesse em um mapa interativo
+- **Perfil**: Gerencie preferências e histórico de visitas
+- **Temas**: Suporte a modo claro, escuro e automático
+- **Multilíngue**: Português, Inglês e Espanhol
 
-### ✅ Navegação e Interface
-- Navegação com React Navigation (Stack + Bottom Tabs)
-- 5 telas principais: Home, Busca, Mapa, Favoritos, Perfil
-- Tema claro/escuro com sistema automático
-- Componentes UI reutilizáveis e responsivos
+## 🛠️ Tecnologias
 
-### ✅ Pontos Turísticos
-- Repositório Firestore para dados dos pontos
-- Sistema de recomendações baseado em localização
-- Busca avançada com filtros (categoria, preço, avaliação)
-- Dados de exemplo com pontos turísticos brasileiros
+- **React Native** com Expo
+- **TypeScript** para tipagem estática
+- **Firebase** (Auth, Firestore, Storage)
+- **React Navigation** para navegação
+- **React Query** para gerenciamento de estado
+- **React Native Maps** para mapas
+- **React Native Paper** para UI
+- **Jest** para testes
 
-### ✅ Mapas e Localização
-- Integração com react-native-maps
-- Serviço de localização com permissões
-- Marcadores customizados por categoria
-- Cálculo de distâncias e pontos próximos
+## 📱 Arquitetura
 
-### ✅ Sistema de Favoritos
-- Adicionar/remover pontos dos favoritos
-- Sincronização em tempo real com Firestore
-- Armazenamento offline com AsyncStorage
-- Atualizações otimistas para melhor UX
-
-### ✅ Tratamento de Erros
-- Error Boundary global para crashes
-- Detecção de conectividade de rede
-- Estados de loading com skeletons
-- Feedback visual para erros e estados offline
-
-### ✅ Internacionalização
-- Suporte a 3 idiomas: Português, Inglês, Espanhol
-- Detecção automática do idioma do dispositivo
-- Hook personalizado para traduções
-
-### ✅ Performance e Qualidade
-- Arquitetura Clean Architecture
-- Testes unitários abrangentes
-- Caching inteligente com React Query
-- Componentes otimizados e reutilizáveis
-
-## 🏗️ Arquitetura
-
-O projeto segue os princípios da Clean Architecture:
+O projeto segue os princípios da **Clean Architecture**:
 
 ```
 src/
-├── core/           # Configurações e serviços centrais
-├── domain/         # Entidades, casos de uso e interfaces
-├── data/           # Implementações de repositórios e fontes de dados
-└── presentation/   # UI, componentes, telas e contextos
+├── core/           # Configurações e utilitários
+├── domain/         # Entidades e casos de uso
+├── data/           # Implementações e repositórios
+└── presentation/   # UI, componentes e telas
 ```
 
-## 🛠️ Tecnologias Utilizadas
+## 🔧 Instalação
 
-- **React Native** + **Expo** - Framework mobile
-- **TypeScript** - Tipagem estática
-- **Firebase** - Backend (Auth + Firestore)
-- **React Navigation** - Navegação
-- **React Query** - Gerenciamento de estado e cache
-- **React Native Maps** - Mapas interativos
-- **Expo Location** - Serviços de localização
-- **AsyncStorage** - Armazenamento local
-- **Jest** - Testes unitários
+### Pré-requisitos
 
-## 📱 Telas Implementadas
+- Node.js 18+
+- npm ou yarn
+- Expo CLI
+- Android Studio ou Xcode (para emuladores)
 
-1. **Splash Screen** - Tela inicial com logo
-2. **Onboarding** - Introdução ao app
-3. **Login/Cadastro** - Autenticação de usuários
-4. **Home** - Recomendações personalizadas
-5. **Busca** - Pesquisa com filtros avançados
-6. **Mapa** - Visualização geográfica dos pontos
-7. **Favoritos** - Lista de pontos salvos
-8. **Perfil** - Informações e configurações do usuário
+### Configuração
+
+1. **Clone o repositório**
+```bash
+git clone <repository-url>
+cd ViagemFacil
+```
+
+2. **Instale as dependências**
+```bash
+npm install --legacy-peer-deps
+```
+
+3. **Configure o Firebase**
+   - Crie um projeto no [Firebase Console](https://console.firebase.google.com)
+   - Ative Authentication (Email/Password)
+   - Ative Firestore Database
+   - Copie as configurações para o arquivo `.env`
+
+4. **Configure o Google Maps**
+   - Obtenha uma API Key no [Google Cloud Console](https://console.cloud.google.com)
+   - Ative a Google Maps SDK
+   - Adicione a chave no arquivo `.env`
+
+5. **Arquivo .env**
+```env
+# Firebase Configuration
+EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
+
+# Google Maps API
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_maps_api_key
+```
+
+## 🚀 Executando
+
+### Desenvolvimento
+```bash
+# Iniciar o servidor de desenvolvimento
+npm start
+
+# Executar no Android
+npm run android
+
+# Executar no iOS
+npm run ios
+
+# Executar no navegador
+npm run web
+```
+
+### Testes
+```bash
+# Executar todos os testes
+npm test
+
+# Executar testes em modo watch
+npm run test:watch
+
+# Gerar relatório de cobertura
+npm run test:coverage
+```
+
+### Build
+```bash
+# Verificar tipos TypeScript
+npm run type-check
+
+# Executar linter
+npm run lint
+
+# Formatar código
+npm run format
+
+# Build para produção
+npm run build
+```
+
+## 📊 Dados de Exemplo
+
+Para popular o banco com dados de exemplo:
+
+```typescript
+import { runSeeder } from './src/data/seeders/pointsSeeder';
+
+// Execute em desenvolvimento
+runSeeder();
+```
 
 ## 🧪 Testes
 
-O projeto inclui testes unitários para:
-- Casos de uso (Use Cases)
-- Repositórios (Repositories)
-- Serviços (Services)
-- Hooks personalizados
-- Componentes React
+O projeto inclui testes unitários e de integração:
 
-Execute os testes com:
-```bash
-npm test
-```
+- **Unit Tests**: Casos de uso, repositórios e serviços
+- **Component Tests**: Componentes React Native
+- **Integration Tests**: Fluxos completos da aplicação
 
-## 🚀 Como Executar
+Cobertura atual: **88%** (83 de 94 testes passando)
 
-1. **Instalar dependências:**
-   ```bash
-   npm install
-   ```
+## 📱 Estrutura de Telas
 
-2. **Configurar Firebase:**
-   - Criar projeto no Firebase Console
-   - Adicionar configurações em `src/core/config/firebase.ts`
+### Autenticação
+- **SplashScreen**: Tela inicial com verificação de autenticação
+- **OnboardingScreen**: Introdução ao aplicativo
+- **LoginScreen**: Login com email/senha
+- **SignUpScreen**: Cadastro de novos usuários
 
-3. **Executar o app:**
-   ```bash
-   npm start
-   ```
+### Principal
+- **HomeScreen**: Recomendações baseadas na localização
+- **SearchScreen**: Busca e filtros avançados
+- **MapScreen**: Mapa interativo com pontos de interesse
+- **FavoritesScreen**: Lista de favoritos do usuário
+- **ProfileScreen**: Perfil e configurações
 
-## 📋 Próximos Passos
+## 🔒 Segurança
 
-Para produção, considere implementar:
-- [ ] Autenticação social (Google, Facebook)
-- [ ] Sistema de avaliações e comentários
-- [ ] Notificações push
-- [ ] Modo offline completo
-- [ ] Analytics e crash reporting
-- [ ] Testes E2E com Detox
+- Autenticação segura com Firebase Auth
+- Validação de dados no frontend e backend
+- Regras de segurança no Firestore
+- Sanitização de inputs do usuário
 
-## 🤝 Contribuição
+## 🌍 Internacionalização
 
-Este projeto foi desenvolvido seguindo as melhores práticas de desenvolvimento mobile e está pronto para extensões futuras.
+Suporte a múltiplos idiomas:
+- Português (Brasil) - Padrão
+- Inglês (Estados Unidos)
+- Espanhol (Espanha)
+
+## 📈 Performance
+
+- Lazy loading de imagens
+- Paginação de resultados
+- Cache inteligente com React Query
+- Otimizações de FlatList
+- Bundle splitting
+
+## 🤝 Contribuindo
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
 ## 📄 Licença
 
-MIT License - veja o arquivo LICENSE para detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+## 📞 Suporte
+
+Para suporte, envie um email para support@viagemfacil.com ou abra uma issue no GitHub.
+
+---
+
+Desenvolvido com ❤️ pela equipe ViagemFácil

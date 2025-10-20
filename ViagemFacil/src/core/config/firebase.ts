@@ -48,5 +48,8 @@ export const auth: Auth = getAuth(app);
 export const firestore: Firestore = getFirestore(app);
 export const storage: FirebaseStorage = getStorage(app);
 
+// Export db as alias for firestore (for compatibility)
+export const db = firestore;
+
 // Export the app instance
 export default app;

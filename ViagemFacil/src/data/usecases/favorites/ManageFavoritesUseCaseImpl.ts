@@ -1,5 +1,13 @@
-import { ManageFavoritesUseCase, ManageFavoritesParams } from '../../../domain/usecases/favorites/ManageFavoritesUseCase';
+import { 
+  ManageFavoritesUseCase, 
+  ManageFavoritesParams, 
+  ToggleFavoriteParams, 
+  GetFavoritesParams 
+} from '../../../domain/usecases/favorites/ManageFavoritesUseCase';
 import { UserRepository } from '../../../domain/repositories/UserRepository';
+import { PointOfInterestRepository } from '../../../domain/repositories/PointOfInterestRepository';
+import { PointOfInterest } from '../../../domain/models/PointOfInterest';
+import { auth } from '../../../core/config/firebase';
 
 /**
  * Implementation of ManageFavoritesUseCase
@@ -7,7 +15,8 @@ import { UserRepository } from '../../../domain/repositories/UserRepository';
  */
 export class ManageFavoritesUseCaseImpl implements ManageFavoritesUseCase {
   constructor(
-    private readonly userRepository: UserRepository
+    private readonly userRepository: UserRepository,
+    private readonly pointOfInterestRepository?: PointOfInterestRepository
   ) {}
 
   async execute(params: ManageFavoritesParams): Promise<void> {
@@ -18,13 +27,13 @@ export class ManageFavoritesUseCaseImpl implements ManageFavoritesUseCase {
 
       switch (action) {
         case 'add':
-          await this.addToFavorites(userId, pointId);
+          await this.addToFavorites({ pointId });
           break;
         case 'remove':
-          await this.removeFromFavorites(userId, pointId);
+          await this.removeFromFavorites({ pointId });
           break;
         case 'toggle':
-          await this.toggleFavorite(userId, pointId);
+          await this.toggleFavorite({ pointId });
           break;
         default:
           throw new Error(`Invalid action: ${action}`);
@@ -35,27 +44,96 @@ export class ManageFavoritesUseCaseImpl implements ManageFavoritesUseCase {
     }
   }
 
-  private async addToFavorites(userId: string, pointId: string): Promise<void> {
-    // Check if already in favorites to avoid duplicates
-    const favoriteIds = await this.userRepository.getFavoritePointIds(userId);
-    
-    if (!favoriteIds.includes(pointId)) {
-      await this.userRepository.addFavoritePoint(userId, pointId);
+  async toggleFavorite(params: ToggleFavoriteParams): Promise<void> {
+    try {
+      const userId = this.getCurrentUserId();
+      const { pointId } = params;
+      
+      const favoriteIds = await this.userRepository.getFavorites(userId);
+      
+      if (favoriteIds.includes(pointId)) {
+        await this.userRepository.removeFromFavorites(userId, pointId);
+      } else {
+        await this.userRepository.addToFavorites(userId, pointId);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      throw new Error('Failed to toggle favorite');
     }
   }
 
-  private async removeFromFavorites(userId: string, pointId: string): Promise<void> {
-    await this.userRepository.removeFavoritePoint(userId, pointId);
+  async addToFavorites(params: ToggleFavoriteParams): Promise<void> {
+    try {
+      const userId = this.getCurrentUserId();
+      const { pointId } = params;
+      
+      // Check if already in favorites to avoid duplicates
+      const favoriteIds = await this.userRepository.getFavorites(userId);
+      
+      if (!favoriteIds.includes(pointId)) {
+        await this.userRepository.addToFavorites(userId, pointId);
+      }
+    } catch (error) {
+      console.error('Error adding to favorites:', error);
+      throw new Error('Failed to add to favorites');
+    }
   }
 
-  private async toggleFavorite(userId: string, pointId: string): Promise<void> {
-    const favoriteIds = await this.userRepository.getFavoritePointIds(userId);
-    
-    if (favoriteIds.includes(pointId)) {
-      await this.removeFromFavorites(userId, pointId);
-    } else {
-      await this.addToFavorites(userId, pointId);
+  async removeFromFavorites(params: ToggleFavoriteParams): Promise<void> {
+    try {
+      const userId = this.getCurrentUserId();
+      const { pointId } = params;
+      
+      await this.userRepository.removeFromFavorites(userId, pointId);
+    } catch (error) {
+      console.error('Error removing from favorites:', error);
+      throw new Error('Failed to remove from favorites');
     }
+  }
+
+  async getFavorites(params: GetFavoritesParams): Promise<readonly PointOfInterest[]> {
+    try {
+      const userId = params.userId || this.getCurrentUserId();
+      const favoriteIds = await this.userRepository.getFavorites(userId);
+      
+      if (!this.pointOfInterestRepository || favoriteIds.length === 0) {
+        return [];
+      }
+
+      // Get full point details for each favorite
+      const favoritePoints: PointOfInterest[] = [];
+      for (const pointId of favoriteIds) {
+        const point = await this.pointOfInterestRepository.getById(pointId);
+        if (point) {
+          favoritePoints.push(point);
+        }
+      }
+      
+      return favoritePoints;
+    } catch (error) {
+      console.error('Error getting favorites:', error);
+      throw new Error('Failed to get favorites');
+    }
+  }
+
+  async isFavorite(params: ToggleFavoriteParams): Promise<boolean> {
+    try {
+      const userId = this.getCurrentUserId();
+      const { pointId } = params;
+      
+      return await this.userRepository.isFavorite(userId, pointId);
+    } catch (error) {
+      console.error('Error checking if favorite:', error);
+      return false;
+    }
+  }
+
+  private getCurrentUserId(): string {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    return currentUser.uid;
   }
 
   private validateParams(params: ManageFavoritesParams): void {

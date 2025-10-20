@@ -56,10 +56,12 @@ export interface PointOfInterest {
   readonly name: string;
   readonly description: string;
   readonly coordinates: Coordinates;
+  readonly location: Coordinates; // Alias for coordinates (for compatibility)
   readonly category: Category;
   readonly rating: number; // 0-5 scale
   readonly priceRange: PriceRange;
   readonly images: readonly string[];
+  readonly imageUrl?: string; // Primary image URL (for compatibility)
   readonly address: string;
   readonly contactInfo?: ContactInfo;
   readonly operatingHours?: readonly string[];
@@ -105,10 +107,12 @@ export const createPointOfInterest = (params: {
     name: params.name.trim(),
     description: params.description.trim(),
     coordinates: params.coordinates,
+    location: params.coordinates, // Alias for coordinates
     category: params.category,
     rating: params.rating,
     priceRange: params.priceRange,
     images: Object.freeze([...params.images]),
+    imageUrl: params.images.length > 0 ? params.images[0] : undefined,
     address: params.address.trim(),
     contactInfo: params.contactInfo,
     operatingHours: params.operatingHours ? Object.freeze([...params.operatingHours]) : undefined,

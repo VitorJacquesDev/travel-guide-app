@@ -4,7 +4,7 @@ export interface NetworkState {
   isConnected: boolean;
   isInternetReachable: boolean;
   type: string;
-  isWifiEnabled?: boolean;
+  isWifiEnabled: boolean;
 }
 
 /**
@@ -47,7 +47,7 @@ export class NetworkService {
       isConnected: netInfoState.isConnected ?? false,
       isInternetReachable: netInfoState.isInternetReachable ?? false,
       type: netInfoState.type,
-      isWifiEnabled: netInfoState.isWifiEnabled,
+      isWifiEnabled: netInfoState.isWifiEnabled ?? false,
     };
 
     const previousState = this.currentState;

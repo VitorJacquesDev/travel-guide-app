@@ -22,7 +22,7 @@ export class SignUpUseCaseImpl implements SignUpUseCase {
    * Validate email format
    */
   private validateEmail(email: string): void {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!email.trim()) {
       throw new SignUpValidationError('Email é obrigatório');
     }

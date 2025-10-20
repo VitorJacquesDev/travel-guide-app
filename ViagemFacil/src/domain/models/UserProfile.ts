@@ -34,6 +34,7 @@ export interface UserPreferences {
   readonly theme: Theme;
   readonly unitSystem: UnitSystem;
   readonly interests: readonly Category[];
+  readonly favoriteCategories: readonly Category[]; // Alias for interests (for compatibility)
   readonly notificationsEnabled: boolean;
 }
 
@@ -48,7 +49,9 @@ export interface UserProfile {
   readonly photoURL?: string;
   readonly preferences: UserPreferences;
   readonly favorites: readonly string[]; // Point IDs
+  readonly favoritePointIds: readonly string[]; // Alias for favorites (for compatibility)
   readonly visitedPlaces: readonly string[]; // Point IDs
+  readonly visitedPointIds: readonly string[]; // Alias for visitedPlaces (for compatibility)
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -61,6 +64,7 @@ export const defaultUserPreferences: UserPreferences = {
   theme: Theme.SYSTEM,
   unitSystem: UnitSystem.METRIC,
   interests: [],
+  favoriteCategories: [],
   notificationsEnabled: true,
 };
 
@@ -90,18 +94,25 @@ export const createUserProfile = (params: {
 
   const now = new Date();
   
+  const favorites = Object.freeze([...(params.favorites || [])]);
+  const visitedPlaces = Object.freeze([...(params.visitedPlaces || [])]);
+  const interests = Object.freeze([...(params.preferences?.interests || [])]);
+  
   return {
     id: params.id,
     email: params.email.toLowerCase().trim(),
     displayName: params.displayName.trim(),
-    photoURL: params.photoURL,
+    photoURL: params.photoURL || undefined,
     preferences: {
       ...defaultUserPreferences,
       ...params.preferences,
-      interests: Object.freeze([...(params.preferences?.interests || [])]),
+      interests,
+      favoriteCategories: interests, // Alias
     },
-    favorites: Object.freeze([...(params.favorites || [])]),
-    visitedPlaces: Object.freeze([...(params.visitedPlaces || [])]),
+    favorites,
+    favoritePointIds: favorites, // Alias
+    visitedPlaces,
+    visitedPointIds: visitedPlaces, // Alias
     createdAt: params.createdAt || now,
     updatedAt: now,
   };
@@ -114,14 +125,17 @@ export const updateUserPreferences = (
   userProfile: UserProfile,
   newPreferences: Partial<UserPreferences>
 ): UserProfile => {
+  const interests = newPreferences.interests 
+    ? Object.freeze([...newPreferences.interests])
+    : userProfile.preferences.interests;
+    
   return {
     ...userProfile,
     preferences: {
       ...userProfile.preferences,
       ...newPreferences,
-      interests: newPreferences.interests 
-        ? Object.freeze([...newPreferences.interests])
-        : userProfile.preferences.interests,
+      interests,
+      favoriteCategories: interests, // Keep alias in sync
     },
     updatedAt: new Date(),
   };
@@ -135,9 +149,11 @@ export const addToFavorites = (userProfile: UserProfile, pointId: string): UserP
     return userProfile; // Already in favorites
   }
 
+  const favorites = Object.freeze([...userProfile.favorites, pointId]);
   return {
     ...userProfile,
-    favorites: Object.freeze([...userProfile.favorites, pointId]),
+    favorites,
+    favoritePointIds: favorites, // Keep alias in sync
     updatedAt: new Date(),
   };
 };
@@ -146,11 +162,12 @@ export const addToFavorites = (userProfile: UserProfile, pointId: string): UserP
  * Remove point from favorites
  */
 export const removeFromFavorites = (userProfile: UserProfile, pointId: string): UserProfile => {
-  const newFavorites = userProfile.favorites.filter(id => id !== pointId);
+  const favorites = Object.freeze(userProfile.favorites.filter(id => id !== pointId));
   
   return {
     ...userProfile,
-    favorites: Object.freeze(newFavorites),
+    favorites,
+    favoritePointIds: favorites, // Keep alias in sync
     updatedAt: new Date(),
   };
 };
@@ -163,9 +180,11 @@ export const addToVisitedPlaces = (userProfile: UserProfile, pointId: string): U
     return userProfile; // Already visited
   }
 
+  const visitedPlaces = Object.freeze([...userProfile.visitedPlaces, pointId]);
   return {
     ...userProfile,
-    visitedPlaces: Object.freeze([...userProfile.visitedPlaces, pointId]),
+    visitedPlaces,
+    visitedPointIds: visitedPlaces, // Keep alias in sync
     updatedAt: new Date(),
   };
 };
