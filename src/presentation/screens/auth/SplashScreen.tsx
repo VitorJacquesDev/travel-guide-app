@@ -6,11 +6,11 @@ import { useAuth } from '../../contexts/AuthContext';
 type Props = AuthStackScreenProps<'Splash'>;
 
 export default function SplashScreen({ navigation }: Props): JSX.Element {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!isLoading) {
+      if (!loading) {
         if (user) {
           // User is authenticated, navigate to main app
           navigation.replace('Onboarding'); // For now, always show onboarding
@@ -22,7 +22,7 @@ export default function SplashScreen({ navigation }: Props): JSX.Element {
     }, 2000); // Show splash for 2 seconds
 
     return () => clearTimeout(timer);
-  }, [user, isLoading, navigation]);
+  }, [user, loading, navigation]);
 
   return (
     <View style={styles.container}>

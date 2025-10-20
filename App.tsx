@@ -2,14 +2,14 @@ import { StatusBar } from 'expo-status-bar';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/presentation/contexts/AuthContext';
-import { AuthExampleScreen } from './src/presentation/screens/auth/AuthExampleScreen';
+import { RootNavigator } from './src/presentation/navigation';
 
-export default function TestLogin() {
+export default function App() {
   return (
     <SafeAreaProvider>
       <PaperProvider>
         <AuthProvider>
-          <AuthExampleScreen />
+          <RootNavigator />
           <StatusBar style="auto" />
         </AuthProvider>
       </PaperProvider>

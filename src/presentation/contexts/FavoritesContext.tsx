@@ -39,9 +39,9 @@ export function FavoritesProvider({ children }: FavoritesProviderProps): JSX.Ele
 
   // Subscribe to real-time favorites updates when user is authenticated
   useEffect(() => {
-    if (user?.uid) {
+    if (user?.id) {
       const unsubscribe = userRepository.subscribeToFavorites(
-        user.uid,
+        user.id,
         (favorites) => {
           setFavoriteIds(favorites);
           // Sync with local storage
@@ -54,7 +54,7 @@ export function FavoritesProvider({ children }: FavoritesProviderProps): JSX.Ele
       // Clear favorites when user logs out
       setFavoriteIds([]);
     }
-  }, [user?.uid]);
+  }, [user?.id]);
 
   const loadLocalFavorites = async () => {
     try {
@@ -81,7 +81,7 @@ export function FavoritesProvider({ children }: FavoritesProviderProps): JSX.Ele
   }, [favoriteIds]);
 
   const addToFavorites = async (pointId: string): Promise<void> => {
-    if (!user?.uid) {
+    if (!user?.id) {
       throw new Error('User must be authenticated to add favorites');
     }
 
@@ -97,7 +97,7 @@ export function FavoritesProvider({ children }: FavoritesProviderProps): JSX.Ele
       }
 
       await manageFavoritesUseCase.execute({
-        userId: user.uid,
+        userId: user.id,
         pointId,
         action: 'add',
       });
@@ -117,7 +117,7 @@ export function FavoritesProvider({ children }: FavoritesProviderProps): JSX.Ele
   };
 
   const removeFromFavorites = async (pointId: string): Promise<void> => {
-    if (!user?.uid) {
+    if (!user?.id) {
       throw new Error('User must be authenticated to remove favorites');
     }
 
@@ -131,7 +131,7 @@ export function FavoritesProvider({ children }: FavoritesProviderProps): JSX.Ele
       await saveLocalFavorites(newFavorites);
 
       await manageFavoritesUseCase.execute({
-        userId: user.uid,
+        userId: user.id,
         pointId,
         action: 'remove',
       });

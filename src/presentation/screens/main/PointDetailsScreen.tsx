@@ -1,58 +1,50 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { Button } from 'react-native-paper';
 import { RootStackScreenProps } from '../../navigation/types';
 
 type Props = RootStackScreenProps<'PointDetails'>;
 
-export default function PointDetailsScreen({ route, navigation }: Props): JSX.Element {
+export default function PointDetailsScreen({ navigation, route }: Props): JSX.Element {
   const { pointId } = route.params;
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 16,
+      backgroundColor: '#f5f5f5',
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 16,
+    },
+    message: {
+      fontSize: 16,
+      textAlign: 'center',
+      color: '#666',
+      marginBottom: 24,
+    },
+    backButton: {
+      marginTop: 16,
+    },
+  });
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Detalhes do Ponto Turístico</Text>
-        <Text style={styles.pointId}>ID: {pointId}</Text>
-        
-        <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>
-            Detalhes completos do ponto turístico serão implementados nas próximas tasks
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
+    <View style={styles.container}>
+      <Text style={styles.title}>Detalhes do Ponto</Text>
+      <Text style={styles.message}>
+        Detalhes do ponto turístico: {pointId}
+      </Text>
+      <Button
+        mode="outlined"
+        onPress={() => navigation.goBack()}
+        style={styles.backButton}
+      >
+        Voltar
+      </Button>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  content: {
-    padding: 24,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 8,
-  },
-  pointId: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 20,
-  },
-  placeholder: {
-    padding: 40,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 200,
-  },
-  placeholderText: {
-    fontSize: 14,
-    color: '#999999',
-    textAlign: 'center',
-  },
-});
