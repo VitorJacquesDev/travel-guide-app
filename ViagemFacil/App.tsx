@@ -5,6 +5,7 @@ import { AuthProvider } from './src/presentation/contexts/AuthContext';
 import { FavoritesProvider } from './src/presentation/contexts/FavoritesContext';
 import { ThemeProvider } from './src/presentation/theme';
 import { RootNavigator } from './src/presentation/navigation';
+import { ErrorBoundary, NetworkStatusBar } from './src/presentation/components';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -18,15 +19,18 @@ const queryClient = new QueryClient({
 
 export default function App(): JSX.Element {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <FavoritesProvider>
-            <RootNavigator />
-            <StatusBar style="auto" />
-          </FavoritesProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <FavoritesProvider>
+              <RootNavigator />
+              <NetworkStatusBar />
+              <StatusBar style="auto" />
+            </FavoritesProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
