@@ -3,11 +3,14 @@ import { View, StyleSheet } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { LoginScreen } from './LoginScreen';
 import SignUpScreen from './SignUpScreen';
+import ForgotPasswordScreen from './ForgotPasswordScreen';
 import { useAuth } from '../../contexts/AuthContext';
+
+type AuthScreenType = 'login' | 'signup' | 'forgot-password';
 
 export function AuthExampleScreen() {
   const { user, logout, loading } = useAuth();
-  const [showSignUp, setShowSignUp] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState<AuthScreenType>('login');
 
   if (loading) {
     return (
@@ -40,14 +43,27 @@ export function AuthExampleScreen() {
     );
   }
 
-  if (showSignUp) {
+  if (currentScreen === 'signup') {
     return (
       <SignUpScreen
         navigation={{
           navigate: (screen: string) => {
             if (screen === 'Login') {
-              setShowSignUp(false);
+              setCurrentScreen('login');
             }
+          },
+        } as any}
+        route={{} as any}
+      />
+    );
+  }
+
+  if (currentScreen === 'forgot-password') {
+    return (
+      <ForgotPasswordScreen
+        navigation={{
+          goBack: () => {
+            setCurrentScreen('login');
           },
         } as any}
         route={{} as any}
@@ -58,11 +74,10 @@ export function AuthExampleScreen() {
   return (
     <LoginScreen
       onForgotPassword={() => {
-        // Implementar tela de recuperação de senha
-        console.log('Esqueci minha senha');
+        setCurrentScreen('forgot-password');
       }}
       onRegister={() => {
-        setShowSignUp(true);
+        setCurrentScreen('signup');
       }}
     />
   );

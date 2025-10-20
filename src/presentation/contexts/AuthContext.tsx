@@ -14,6 +14,7 @@ interface AuthContextData {
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  sendPasswordResetEmail: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -95,6 +96,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const sendPasswordResetEmail = async (email: string): Promise<void> => {
+    return resetPassword(email);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -104,6 +109,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         signUp,
         logout,
         resetPassword,
+        sendPasswordResetEmail,
       }}
     >
       {children}

@@ -53,10 +53,28 @@ export function useAuthForm() {
     }
   };
 
+  const handleForgotPassword = async (email: string) => {
+    try {
+      setLoading(true);
+      await resetPassword(email);
+      Alert.alert(
+        'Email Enviado',
+        'Verifique sua caixa de entrada para redefinir sua senha.'
+      );
+      return true;
+    } catch (error: any) {
+      Alert.alert('Erro', error.message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     handleLogin,
     handleSignUp,
     handleResetPassword,
+    handleForgotPassword,
   };
 }

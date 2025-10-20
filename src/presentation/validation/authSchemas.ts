@@ -41,6 +41,10 @@ export const resetPasswordSchema = z.object({
     .email('Email inválido'),
 });
 
+// Alias para compatibilidade
+export const passwordResetSchema = resetPasswordSchema;
+
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type SignUpFormData = z.infer<typeof signUpSchema>;
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+export type PasswordResetFormData = ResetPasswordFormData;
