@@ -2,6 +2,7 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './src/presentation/contexts/AuthContext';
+import { FavoritesProvider } from './src/presentation/contexts/FavoritesContext';
 import { ThemeProvider } from './src/presentation/theme';
 import { RootNavigator } from './src/presentation/navigation';
 
@@ -20,8 +21,10 @@ export default function App(): JSX.Element {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <RootNavigator />
-          <StatusBar style="auto" />
+          <FavoritesProvider>
+            <RootNavigator />
+            <StatusBar style="auto" />
+          </FavoritesProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

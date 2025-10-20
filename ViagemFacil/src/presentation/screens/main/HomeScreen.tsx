@@ -14,6 +14,7 @@ import * as Location from 'expo-location';
 import { MainTabScreenProps } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { useRecommendations } from '../../hooks';
+import { useFavorites } from '../../contexts/FavoritesContext';
 import { PointOfInterestCard, LoadingState, ErrorState, EmptyState } from '../../components';
 import { PointOfInterest, Coordinates } from '../../../domain/models/PointOfInterest';
 import { useRootNavigation } from '../../navigation/navigationUtils';
@@ -23,6 +24,7 @@ type Props = MainTabScreenProps<'Home'>;
 export default function HomeScreen({ navigation }: Props): JSX.Element {
   const { theme } = useTheme();
   const rootNavigation = useRootNavigation();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [userLocation, setUserLocation] = useState<Coordinates | undefined>();
   const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
 
@@ -67,13 +69,12 @@ export default function HomeScreen({ navigation }: Props): JSX.Element {
     rootNavigation.navigate('PointDetails', { pointId: point.id });
   };
 
-  const handleFavoritePress = (point: PointOfInterest) => {
-    // TODO: Implement favorites functionality in Task 6
-    Alert.alert(
-      'Favoritos',
-      'Funcionalidade de favoritos será implementada na Task 6',
-      [{ text: 'OK' }]
-    );
+  const handleFavoritePress = async (point: PointOfInterest) => {
+    try {
+      await toggleFavorite(point.id);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível atualizar os favoritos.');
+    }
   };
 
   const handleLocationPress = () => {
@@ -94,7 +95,7 @@ export default function HomeScreen({ navigation }: Props): JSX.Element {
       point={item}
       onPress={() => handlePointPress(item)}
       onFavoritePress={() => handleFavoritePress(item)}
-      isFavorite={false} // TODO: Get from favorites context in Task 6
+      isFavorite={isFavorite(item.id)}
     />
   );
 

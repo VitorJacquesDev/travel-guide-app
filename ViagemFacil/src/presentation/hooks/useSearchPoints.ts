@@ -82,3 +82,19 @@ export function usePopularPoints(
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
 }
+
+/**
+ * Hook for getting multiple points by their IDs
+ */
+export function usePointsByIds(
+  ids: readonly string[],
+  enabled = true
+): UseQueryResult<readonly PointOfInterest[], Error> {
+  return useQuery({
+    queryKey: ['pointsByIds', ids],
+    queryFn: () => repository.getPointsByIds(ids),
+    enabled: enabled && ids.length > 0,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+  });
+}

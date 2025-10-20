@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MainTabScreenProps } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { useSearchPoints } from '../../hooks';
+import { useFavorites } from '../../contexts/FavoritesContext';
 import { 
   SearchBar, 
   PointOfInterestCard, 
@@ -54,6 +55,7 @@ const RATING_OPTIONS = [
 export default function SearchScreen({ navigation }: Props): JSX.Element {
   const { theme } = useTheme();
   const rootNavigation = useRootNavigation();
+  const { isFavorite, toggleFavorite } = useFavorites();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
@@ -112,12 +114,12 @@ export default function SearchScreen({ navigation }: Props): JSX.Element {
     rootNavigation.navigate('PointDetails', { pointId: point.id });
   };
 
-  const handleFavoritePress = (point: PointOfInterest) => {
-    Alert.alert(
-      'Favoritos',
-      'Funcionalidade de favoritos será implementada na Task 6',
-      [{ text: 'OK' }]
-    );
+  const handleFavoritePress = async (point: PointOfInterest) => {
+    try {
+      await toggleFavorite(point.id);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível atualizar os favoritos.');
+    }
   };
 
   const renderSearchResult = ({ item }: { item: PointOfInterest }) => (
@@ -125,7 +127,7 @@ export default function SearchScreen({ navigation }: Props): JSX.Element {
       point={item}
       onPress={() => handlePointPress(item)}
       onFavoritePress={() => handleFavoritePress(item)}
-      isFavorite={false}
+      isFavorite={isFavorite(item.id)}
     />
   );
 
